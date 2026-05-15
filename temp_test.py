@@ -1,4 +1,5 @@
 from algo import merge_one_token_list
+from algo import choose_best
 
 
 def test_merge():
@@ -19,3 +20,7 @@ def test_merge():
     result = merge_one_token_list(token_list, best_pair)
     assert result == [
         'a', 'b</w>'], f"Expected ['a','b</w>'], but got {result}"
+
+
+def test_choose_best():
+    pass

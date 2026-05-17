@@ -9,6 +9,7 @@ import torch
 from jaxtyping import Bool, Float, Int
 from torch import Tensor
 
+from cs336_basics.tokenizer import *
 
 def run_linear(
     d_in: int,
@@ -589,4 +590,22 @@ def run_train_bpe(
                 representing that <token1> was merged with <token2>.
                 Merges are ordered by order of creation.
     """
-    raise NotImplementedError
+    
+    # 读取路径文本，返回切分后的token和对应频次列表，得到初始state，形如：[(b'h', 100), (b'e', 80), (b'l', 150), (b'o', 90)]
+    state = pre_tokenize(input_path, special_tokens)
+
+    # 定义训练的轮数，vocab_size - 特殊token数量 - 256(初始vocab大小)就是需要训练的轮数
+    num_merges = vocab_size - len(special_tokens) - 256
+
+    # 进行BPE训练，得到最终state和merge规则
+    state, merges = BPE(state, num_merges)
+
+    # 构建 vocab的映射，{0..255:对应单字节} + special_tokens + merge后的新token
+    for i in range(256):
+        final_vocab[i] = bytes([i])
+    for i, token in enumerate(special_tokens, start=256):
+        final_vocab[i] = token.encode('utf-8')
+    for i, (token1, token2) in enumerate(merges, start=256 + len(special_tokens)):
+        final_vocab[i] = token1 + token2
+
+    return final_vocab, merges
